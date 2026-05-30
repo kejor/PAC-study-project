@@ -26,6 +26,7 @@ noreturn void secret_admin(void)         { emit_and_exit("t02"); }
 noreturn void exploit_success_t04(void)  { emit_and_exit("t04"); }
 noreturn void exploit_success_t05a(void) { emit_and_exit("t05a"); }
 noreturn void exploit_success_t05b(void) { emit_and_exit("t05b"); }
+noreturn void exploit_success_t06(void)  { emit_and_exit("t06"); }
 
 void exploit_success_with_arg(void)
 {

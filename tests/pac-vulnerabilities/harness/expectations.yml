@@ -39,3 +39,14 @@ t05a_fptr_overwrite:
 t05b_data_only:
   nopac: { stdout_contains: "PWNED:t05b", exit: [0] }
   pac:   { stdout_contains: "PWNED:t05b", exit: [0] }
+
+# t06 documents a PAC-ret bypass (Liljestrand et al., USENIX Sec '19,
+# Sections 3 and 7.2.1): pac-ret signs LR with SP as the modifier, so
+# an authenticated LR captured from one function is reusable in any
+# other function that runs at the same SP. PARTS (Section 5.3,
+# Listing 2) fixes this with a function-id modifier; vanilla
+# -mbranch-protection=pac-ret does not. Both variants are expected
+# to succeed because PAC does NOT block this primitive.
+t06_sp_collision_pac_reuse:
+  nopac: { stdout_contains: "PWNED:t06", exit: [0] }
+  pac:   { stdout_contains: "PWNED:t06", exit: [0] }

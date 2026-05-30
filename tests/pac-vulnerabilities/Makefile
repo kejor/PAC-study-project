@@ -25,9 +25,10 @@ SRCS_t03_rop_2gadget      := t03_rop_2gadget/vuln.c t03_rop_2gadget/gadgets.c
 SRCS_t04_off_by_one_lr    := t04_off_by_one_lr/vuln.c
 SRCS_t05a_fptr_overwrite  := t05_negative_controls/fptr_overwrite.c
 SRCS_t05b_data_only       := t05_negative_controls/data_only.c
+SRCS_t06_sp_collision_pac_reuse := t06_sp_collision_pac_reuse/vuln.c
 
 TESTS    := t01_stack_bof_ret t02_ret2func t03_rop_2gadget t04_off_by_one_lr \
-            t05a_fptr_overwrite t05b_data_only
+            t05a_fptr_overwrite t05b_data_only t06_sp_collision_pac_reuse
 VARIANTS := nopac pac
 
 # Host-aware runner (matches baseline/aarch64-hello-pac/Makefile pattern).

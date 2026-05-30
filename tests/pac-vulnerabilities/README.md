@@ -1,8 +1,8 @@
 # PAC Vulnerability Test Suite
 
-Five self-contained C programs demonstrating attack primitives that PAC-ret blocks (t01–t04) and two negative controls showing what PAC-ret does not protect (t05). Each program is built in two variants — no-PAC and PAC — and driven by a Python harness that checks expected outcomes.
+Six self-contained C programs demonstrating attack primitives that PAC-ret blocks (t01–t04), two negative controls showing what PAC-ret does not protect (t05a/t05b), and one documented PAC-ret bypass via SP-collision LR reuse (t06). Each program is built in two variants — no-PAC and PAC — and driven by a Python harness that checks expected outcomes.
 
-See ADR-2026-05-30-005 for full design rationale.
+See ADR-2026-05-30-005 for the original suite design and ADR-2026-05-30-006 for t06.
 
 ## Prerequisites
 
@@ -45,8 +45,11 @@ make clean
 | t04 | Off-by-N LR low-byte corruption (3 bytes, 16 MiB window) | `PWNED:t04`, exit 0 | Blocked (SIGSEGV) |
 | t05a | Function-pointer overwrite (forward-edge) | `PWNED:t05a`, exit 0 | `PWNED:t05a`, exit 0 |
 | t05b | Data-only (`is_admin` flag) | `PWNED:t05b`, exit 0 | `PWNED:t05b`, exit 0 |
+| t06  | SP-collision PAC reuse (signed LR replay across peers) | `PWNED:t06`, exit 0 | `PWNED:t06`, exit 0 |
 
 t05a and t05b are **negative controls** — PAC-ret only signs/verifies return addresses, so forward-edge and data-only attacks are outside its threat model. Both variants succeeding is the expected, correct result.
+
+t06 is a **documented PAC-ret bypass** (Liljestrand et al., USENIX Sec '19, Sections 3 / 7.2.1): pac-ret uses SP alone as the signing modifier, so an authenticated LR captured from one function is reusable inside any peer function called at the same SP. Both variants succeeding is the expected result — it is the one case in this suite where `-mbranch-protection=pac-ret` does not block a return-address primitive.
 
 ## Key implementation constraints
 
