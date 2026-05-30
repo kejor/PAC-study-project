@@ -4,3 +4,4 @@
 - [Project Structure](project_structure.md) — adr/, baseline/, records/ layout; ADR and records naming conventions
 - [Toolchain Decisions](toolchain_decisions.md) — cross-compiler, Docker linux/arm64 runner, CC= vs CC?= gotcha, PAC flags
 - [PAC Baseline Status](pac_baseline_status.md) — verify-static/verify-trap passing; SIGBUS=exit 135 is the PAC trap signal
+- [Agent Pipeline](agent_pipeline.md) — three-stage ADR pipeline; adr-implementation-tester owns all test/fix work exclusively

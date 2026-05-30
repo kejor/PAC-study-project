@@ -6,3 +6,5 @@ baseline/*/build/
 # packaged or distributed outside the test tree.
 tests/pac-vulnerabilities/build/
 
+pac-it-up-sec19.pdf
+papers
