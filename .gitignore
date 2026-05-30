@@ -1,2 +1,8 @@
 # Built baseline binaries — see ADR-2026-05-25-001
 baseline/*/build/
+
+# Built PAC vulnerability test binaries — see ADR-2026-05-30-005.
+# These are intentionally exploitable test programs and must not be
+# packaged or distributed outside the test tree.
+tests/pac-vulnerabilities/build/
+

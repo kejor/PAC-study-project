@@ -1,0 +1,41 @@
+# Expected outcomes for the PAC vulnerability suite (ADR-2026-05-30-005).
+#
+# For each test, declare what the harness should see on each variant:
+#   stdout_contains  -- substring that MUST appear in stdout for PASS
+#   stdout_excludes  -- substring that MUST NOT appear in stdout for PASS
+#   exit             -- list of acceptable process exit codes for PASS
+#
+# Exit codes 132/134/135/139 = 128 + signal: SIGILL, SIGABRT, SIGBUS, SIGSEGV.
+# The pac variant of t01-t04 accepts any of these to mirror verify-trap in
+# baseline/aarch64-hello-pac/Makefile.
+#
+# UNEXPECTED:* in stdout is always an ERROR regardless of these rules; the
+# harness flags it before applying the contains/excludes checks.
+
+t01_stack_bof_ret:
+  nopac: { stdout_contains: "PWNED:t01", exit: [0] }
+  pac:   { stdout_excludes: "PWNED:t01", exit: [132, 134, 135, 139] }
+
+t02_ret2func:
+  nopac: { stdout_contains: "PWNED:t02", exit: [0] }
+  pac:   { stdout_excludes: "PWNED:t02", exit: [132, 134, 135, 139] }
+
+t03_rop_2gadget:
+  nopac: { stdout_contains: "PWNED:t03", exit: [0] }
+  pac:   { stdout_excludes: "PWNED:t03", exit: [132, 134, 135, 139] }
+
+t04_off_by_one_lr:
+  nopac: { stdout_contains: "PWNED:t04", exit: [0] }
+  pac:   { stdout_excludes: "PWNED:t04", exit: [132, 134, 135, 139] }
+
+# Negative controls: PAC-ret does NOT block these. Both variants are
+# expected to succeed (win string present, exit 0). Their purpose is to
+# document the boundary of pac-ret's protection, not to detect anything.
+
+t05a_fptr_overwrite:
+  nopac: { stdout_contains: "PWNED:t05a", exit: [0] }
+  pac:   { stdout_contains: "PWNED:t05a", exit: [0] }
+
+t05b_data_only:
+  nopac: { stdout_contains: "PWNED:t05b", exit: [0] }
+  pac:   { stdout_contains: "PWNED:t05b", exit: [0] }
