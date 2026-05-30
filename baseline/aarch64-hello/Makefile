@@ -1,7 +1,7 @@
 # Baseline aarch64 hello-world build
 # See ADR-2026-05-25-001 for rationale.
 
-CC      ?= aarch64-linux-gnu-gcc
+CC      ?= aarch64-unknown-linux-gnu-gcc
 QEMU    ?= qemu-aarch64
 CFLAGS  := -O0 -g -static -Wall -Wextra
 
@@ -9,11 +9,11 @@ BUILD_DIR := build
 TARGET    := $(BUILD_DIR)/hello
 SRC       := hello.c
 
-.PHONY: all build run clean
+.PHONY: all compile run clean
 
-all: build
+all: compile
 
-build: $(TARGET)
+compile: $(TARGET)
 
 $(TARGET): $(SRC) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $<
@@ -21,7 +21,7 @@ $(TARGET): $(SRC) | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-run: build
+run: compile
 	$(QEMU) $(TARGET); \
 	status=$$?; \
 	if [ $$status -ne 0 ]; then \

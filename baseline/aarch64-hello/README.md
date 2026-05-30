@@ -15,13 +15,13 @@ brew install aarch64-unknown-linux-gnu
 brew install qemu
 ```
 
-The cross compiler is exposed as `aarch64-unknown-linux-gnu-gcc`. The Makefile
-defaults to `aarch64-linux-gnu-gcc`; if your install uses the
-`aarch64-unknown-linux-gnu-gcc` name (as the Homebrew tap above provides),
-override `CC` on the command line:
+The cross compiler is exposed as `aarch64-unknown-linux-gnu-gcc`, which is the
+Makefile default (see [ADR-2026-05-30-002](../../adr/ADR-2026-05-30-002-macos-toolchain-and-makefile-fix.md)).
+On Linux hosts that ship the `aarch64-linux-gnu-gcc` triple instead, override
+`CC` on the command line:
 
 ```sh
-make build CC=aarch64-unknown-linux-gnu-gcc
+make compile CC=aarch64-linux-gnu-gcc
 ```
 
 `qemu-aarch64` ships inside the `qemu` formula.
@@ -43,10 +43,11 @@ qemu-aarch64 --version
 ## Build
 
 ```sh
-make build
+make compile
 ```
 
-Produces `build/hello`.
+Produces `build/hello`. `make` (with no target) does the same via the default
+`all` goal.
 
 ## Run
 
