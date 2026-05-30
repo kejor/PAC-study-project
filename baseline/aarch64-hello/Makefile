@@ -1,7 +1,7 @@
 # Baseline aarch64 hello-world build
 # See ADR-2026-05-25-001, ADR-2026-05-30-002, ADR-2026-05-30-003 for rationale.
 
-CC      ?= aarch64-unknown-linux-gnu-gcc
+CC      = aarch64-unknown-linux-gnu-gcc
 CFLAGS  := -O0 -g -static -Wall -Wextra
 
 BUILD_DIR := build
