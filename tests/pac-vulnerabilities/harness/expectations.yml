@@ -75,3 +75,19 @@ t07_explicit_data_signing:
 t08_pac_oracle_bruteforce:
   nopac: { stdout_contains: "PWNED:t08", exit: [0] }
   pac:   { stdout_contains: "PWNED:t08", exit: [0] }
+
+# t09 documents the LLVM pac-ret leaf-function signing gap
+# (SignReturnAddress::NonLeaf in AArch64MachineFunctionInfo.h).
+# Under -mbranch-protection=pac-ret (LLVM default), leaf functions
+# get no paciasp/autiasp -- so an attacker who can corrupt X30 inside
+# a leaf function returns to the corrupted target unchecked. The
+# pac_leaf variant builds with -mbranch-protection=pac-ret+leaf
+# (SignReturnAddress::All) which signs ALL functions and closes the
+# gap. Three variants:
+#   nopac    -- baseline; X30 corruption succeeds -> PWN
+#   pac      -- LLVM default; leaf is unsigned    -> PWN (this is the gap)
+#   pac_leaf -- pac-ret+leaf; leaf is signed      -> trap
+t09_leaf_signing_gap:
+  nopac:    { stdout_contains: "PWNED:t09", exit: [0] }
+  pac:      { stdout_contains: "PWNED:t09", exit: [0] }
+  pac_leaf: { stdout_excludes: "PWNED:t09", exit: [132, 134, 135, 139] }

@@ -29,7 +29,10 @@ BUILD_DIR = ROOT / "build"
 EXPECTATIONS_PATH = ROOT / "harness" / "expectations.yml"
 RESULTS_PATH = BUILD_DIR / "results.json"
 
-VARIANTS = ("nopac", "pac")
+# NOTE: there is intentionally no module-level VARIANTS constant. Per
+# ADR-2026-05-30-009, the canonical variant set is defined per-test in
+# expectations.yml. The main() loop iterates whatever variant keys each
+# test declares (nopac, pac, pac_leaf, ...).
 
 
 # --------------------------- minimal YAML parser ---------------------------
@@ -203,9 +206,11 @@ def main() -> int:
     summary = []
     all_pass = True
     for t in tests:
-        for v in VARIANTS:
-            rule = expectations[t].get(v)
-            if not rule:
+        # Variant set is whatever expectations.yml declares for this test
+        # (per ADR-2026-05-30-009). Skip non-dict values defensively in
+        # case future YAML entries add scalar metadata at the test level.
+        for v, rule in expectations[t].items():
+            if not isinstance(rule, dict):
                 continue
             raw = run_one(v, t)
             status, reason = classify(raw, rule)
