@@ -50,3 +50,13 @@ t05b_data_only:
 t06_sp_collision_pac_reuse:
   nopac: { stdout_contains: "PWNED:t06", exit: [0] }
   pac:   { stdout_contains: "PWNED:t06", exit: [0] }
+
+# t07 demonstrates that PAC hardware CAN protect arbitrary 64-bit data
+# when the program explicitly signs/authenticates it via inline asm
+# pacia/autia (instruction A-key). This is the complement to t05b
+# (which shows that compiler-default pac-ret does NOT cover data).
+# Reference: Choi et al., "High-Performance and Secure Data Integrity
+# Verification using ARM Pointer Authentication", ICTC 2025 (I-ACIV).
+t07_explicit_data_signing:
+  nopac: { stdout_contains: "PWNED:t07", exit: [0] }
+  pac:   { stdout_excludes: "PWNED:t07", exit: [132, 134, 135, 139] }

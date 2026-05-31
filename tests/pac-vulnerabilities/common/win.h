@@ -25,6 +25,7 @@ noreturn void exploit_success_t04(void);
 noreturn void exploit_success_t05a(void);
 noreturn void exploit_success_t05b(void);
 noreturn void exploit_success_t06(void);     /* t06: prints "PWNED:t06"   */
+noreturn void exploit_success_t07(void);     /* t07: prints "PWNED:t07"   */
 
 /* t03 entry point: only prints "PWNED:t03" iff magic == 0xC0DECAFE, proving
    that the 2-gadget ROP chain successfully loaded a controlled value into

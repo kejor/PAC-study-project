@@ -1,5 +1,5 @@
-# PAC vulnerability test suite (ADR-2026-05-30-005).
-# Builds six self-contained vulnerability programs in two variants each
+# PAC vulnerability test suite (ADR-2026-05-30-005, expanded by -006, -007).
+# Builds seven self-contained vulnerability programs in two variants each
 # (nopac, pac) and drives a Python harness that checks expected outcomes.
 
 CC      = aarch64-unknown-linux-gnu-gcc
@@ -26,10 +26,29 @@ SRCS_t04_off_by_one_lr    := t04_off_by_one_lr/vuln.c
 SRCS_t05a_fptr_overwrite  := t05_negative_controls/fptr_overwrite.c
 SRCS_t05b_data_only       := t05_negative_controls/data_only.c
 SRCS_t06_sp_collision_pac_reuse := t06_sp_collision_pac_reuse/vuln.c
+SRCS_t07_explicit_data_signing  := t07_explicit_data_signing/vuln.c
 
 TESTS    := t01_stack_bof_ret t02_ret2func t03_rop_2gadget t04_off_by_one_lr \
-            t05a_fptr_overwrite t05b_data_only t06_sp_collision_pac_reuse
+            t05a_fptr_overwrite t05b_data_only t06_sp_collision_pac_reuse \
+            t07_explicit_data_signing
 VARIANTS := nopac pac
+
+# Per-test extra CFLAGS (per ADR-2026-05-30-007). Indexed by test name and
+# variant: CFLAGS_<test>__<variant>. Tests that do not define an entry get
+# an empty expansion in BUILD_RULE, so t01-t06 builds are unchanged.
+#
+# t07 uses a source-level toggle rather than a compiler-flag toggle: both
+# variants build with the same COMMON_CFLAGS (plus pac-ret on the pac side
+# for consistency with the suite), and the load-bearing difference is the
+# -DUSE_PAC_DATA_SIGNING=1 below which gates the inline-asm pacia/autia
+# helpers in vuln.c.
+# -march=armv8.3-a is needed so the assembler accepts the `pacia` / `autia`
+# mnemonics used by t07's inline asm. Empirically the pinned
+# aarch64-unknown-linux-gnu-gcc toolchain in this project does NOT accept
+# them at its default -march level, so this flag is required (see ADR-007
+# implementation-notes "If the toolchain rejects the instruction mnemonic"
+# clause).
+CFLAGS_t07_explicit_data_signing__pac := -DUSE_PAC_DATA_SIGNING=1 -march=armv8.3-a
 
 # Host-aware runner (matches baseline/aarch64-hello-pac/Makefile pattern).
 # macOS: Docker linux/arm64 exposes real armv8.3 PAC via Apple Virtualization.
@@ -49,7 +68,7 @@ all: build
 
 help:
 	@echo "Targets:"
-	@echo "  build          -- compile all 12 binaries (nopac + pac for 6 tests)"
+	@echo "  build          -- compile all 14 binaries (nopac + pac for 7 tests)"
 	@echo "  test           -- build, then run the full harness"
 	@echo "  test-<name>    -- run one test only (e.g. test-t01_stack_bof_ret)"
 	@echo "  verify-static  -- objdump-grep paciasp/autiasp in every pac/ binary"
@@ -63,7 +82,7 @@ $(BUILD_DIR)/nopac $(BUILD_DIR)/pac:
 # CFLAGS variable name as a third argument to avoid shell-side case mapping.
 define BUILD_RULE
 $(BUILD_DIR)/$(1)/$(2): $(SRCS_$(2)) $(COMMON) common/win.h | $(BUILD_DIR)/$(1)
-	$$(CC) $$($(3)) -I common -o $$@ $(SRCS_$(2)) $(COMMON)
+	$$(CC) $$($(3)) $(CFLAGS_$(2)__$(1)) -I common -o $$@ $(SRCS_$(2)) $(COMMON)
 endef
 
 $(foreach t,$(TESTS),$(eval $(call BUILD_RULE,nopac,$(t),NOPAC_CFLAGS)))
@@ -78,13 +97,13 @@ build: $(BINARIES)
 verify-static: build
 	@echo "[verify-static] checking paciasp/autiasp in pac/ binaries"
 	@fail=0; for b in $(foreach t,$(TESTS),$(BUILD_DIR)/pac/$(t)); do \
-	    pac_count=$$($(OBJDUMP) -d $$b | grep -cE "paciasp"); \
-	    aut_count=$$($(OBJDUMP) -d $$b | grep -cE "autiasp"); \
+	    pac_count=$$($(OBJDUMP) -d $$b | grep -cE "paciasp|pacia"); \
+	    aut_count=$$($(OBJDUMP) -d $$b | grep -cE "autiasp|autia"); \
 	    if [ "$$pac_count" -lt 1 ] || [ "$$aut_count" -lt 1 ]; then \
-	        echo "FAIL: $$b paciasp=$$pac_count autiasp=$$aut_count" >&2; \
+	        echo "FAIL: $$b paciasp/pacia=$$pac_count autiasp/autia=$$aut_count" >&2; \
 	        fail=1; \
 	    else \
-	        echo "  OK   $$b (paciasp=$$pac_count, autiasp=$$aut_count)"; \
+	        echo "  OK   $$b (paciasp/pacia=$$pac_count, autiasp/autia=$$aut_count)"; \
 	    fi; \
 	done; \
 	if [ "$$fail" -ne 0 ]; then exit 1; fi

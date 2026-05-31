@@ -1,8 +1,8 @@
 # PAC Vulnerability Test Suite
 
-Six self-contained C programs demonstrating attack primitives that PAC-ret blocks (t01–t04), two negative controls showing what PAC-ret does not protect (t05a/t05b), and one documented PAC-ret bypass via SP-collision LR reuse (t06). Each program is built in two variants — no-PAC and PAC — and driven by a Python harness that checks expected outcomes.
+Seven self-contained C programs demonstrating attack primitives that PAC-ret blocks (t01–t04), two negative controls showing what PAC-ret does not protect (t05a/t05b), one documented PAC-ret bypass via SP-collision LR reuse (t06), and one positive demonstration of explicit PAC data-signing protecting arbitrary 64-bit data (t07). Each program is built in two variants — no-PAC and PAC — and driven by a Python harness that checks expected outcomes.
 
-See ADR-2026-05-30-005 for the original suite design and ADR-2026-05-30-006 for t06.
+See ADR-2026-05-30-005 for the original suite design, ADR-2026-05-30-006 for t06, and ADR-2026-05-30-007 for t07.
 
 ## Prerequisites
 
@@ -46,10 +46,13 @@ make clean
 | t05a | Function-pointer overwrite (forward-edge) | `PWNED:t05a`, exit 0 | `PWNED:t05a`, exit 0 |
 | t05b | Data-only (`is_admin` flag) | `PWNED:t05b`, exit 0 | `PWNED:t05b`, exit 0 |
 | t06  | SP-collision PAC reuse (signed LR replay across peers) | `PWNED:t06`, exit 0 | `PWNED:t06`, exit 0 |
+| t07  | Explicit `pacia`/`autia` data signing of a critical config word | `PWNED:t07`, exit 0 | Blocked (SIGSEGV) |
 
 t05a and t05b are **negative controls** — PAC-ret only signs/verifies return addresses, so forward-edge and data-only attacks are outside its threat model. Both variants succeeding is the expected, correct result.
 
 t06 is a **documented PAC-ret bypass** (Liljestrand et al., USENIX Sec '19, Sections 3 / 7.2.1): pac-ret uses SP alone as the signing modifier, so an authenticated LR captured from one function is reusable inside any peer function called at the same SP. Both variants succeeding is the expected result — it is the one case in this suite where `-mbranch-protection=pac-ret` does not block a return-address primitive.
+
+t07 is a **positive complement to t05b** (Choi et al., ICTC 2025, "I-ACIV"): PAC hardware CAN protect arbitrary 64-bit data — but only if the program explicitly invokes `pacia`/`autia` on that data. Unlike t01–t06, t07's no-PAC vs PAC split is a source-level preprocessor toggle (`-DUSE_PAC_DATA_SIGNING=1` on the PAC variant) rather than `-mbranch-protection`, because `pac-ret` does not emit data-signing instructions. The PAC variant traps on the corrupted authenticated value; the no-PAC variant runs the same source with the inline asm `#if`'d out and reaches the win target. Requires ARMv8.3-A PAC at runtime (Apple Silicon via Docker linux/arm64 is sufficient; on hardware without v8.3 PAC, `pacia`/`autia` execute as HINT NOPs and the PAC variant would fail).
 
 ## Key implementation constraints
 
