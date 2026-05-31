@@ -1,5 +1,5 @@
-# PAC vulnerability test suite (ADR-2026-05-30-005, expanded by -006, -007).
-# Builds seven self-contained vulnerability programs in two variants each
+# PAC vulnerability test suite (ADR-2026-05-30-005, expanded by -006, -007, -008).
+# Builds eight self-contained vulnerability programs in two variants each
 # (nopac, pac) and drives a Python harness that checks expected outcomes.
 
 CC      = aarch64-unknown-linux-gnu-gcc
@@ -27,10 +27,11 @@ SRCS_t05a_fptr_overwrite  := t05_negative_controls/fptr_overwrite.c
 SRCS_t05b_data_only       := t05_negative_controls/data_only.c
 SRCS_t06_sp_collision_pac_reuse := t06_sp_collision_pac_reuse/vuln.c
 SRCS_t07_explicit_data_signing  := t07_explicit_data_signing/vuln.c
+SRCS_t08_pac_oracle_bruteforce  := t08_pac_oracle_bruteforce/vuln.c
 
 TESTS    := t01_stack_bof_ret t02_ret2func t03_rop_2gadget t04_off_by_one_lr \
             t05a_fptr_overwrite t05b_data_only t06_sp_collision_pac_reuse \
-            t07_explicit_data_signing
+            t07_explicit_data_signing t08_pac_oracle_bruteforce
 VARIANTS := nopac pac
 
 # Per-test extra CFLAGS (per ADR-2026-05-30-007). Indexed by test name and
@@ -50,6 +51,14 @@ VARIANTS := nopac pac
 # clause).
 CFLAGS_t07_explicit_data_signing__pac := -DUSE_PAC_DATA_SIGNING=1 -march=armv8.3-a
 
+# t08 (per ADR-2026-05-30-008): software PAC oracle / brute-force test. Both
+# variants receive -DBRUTE_BITS=8 so the source can uniformly reference the
+# constant; only the pac variant defines USE_PAC_BRUTE=1 to enable the
+# inline-asm pacia / blraa helpers. -march=armv8.3-a is required (same as
+# t07) so the assembler accepts those mnemonics.
+CFLAGS_t08_pac_oracle_bruteforce__pac   := -DUSE_PAC_BRUTE=1 -DBRUTE_BITS=8 -march=armv8.3-a
+CFLAGS_t08_pac_oracle_bruteforce__nopac := -DBRUTE_BITS=8
+
 # Host-aware runner (matches baseline/aarch64-hello-pac/Makefile pattern).
 # macOS: Docker linux/arm64 exposes real armv8.3 PAC via Apple Virtualization.
 # Linux: assume native aarch64; binaries can run directly.
@@ -68,7 +77,7 @@ all: build
 
 help:
 	@echo "Targets:"
-	@echo "  build          -- compile all 14 binaries (nopac + pac for 7 tests)"
+	@echo "  build          -- compile all 18 binaries (nopac + pac for 9 tests)"
 	@echo "  test           -- build, then run the full harness"
 	@echo "  test-<name>    -- run one test only (e.g. test-t01_stack_bof_ret)"
 	@echo "  verify-static  -- objdump-grep paciasp/autiasp in every pac/ binary"
